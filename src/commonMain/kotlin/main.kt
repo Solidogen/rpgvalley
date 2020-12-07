@@ -7,7 +7,8 @@ import com.soywiz.korio.file.std.*
 
 suspend fun main() = Korge(width = 400, height = 400) {
 	val tiledMap = resourcesVfs["zeldagfx/overworld_tiled_map.tmx"].readTiledMap()
-	tiledMap.objectLayers.find { it.name == "CollisionMask" }?.visible = false
+	val collisionMaskLayer = tiledMap.objectLayers.find { it.name == "CollisionMask" }
+	collisionMaskLayer?.visible = false
 	fixedSizeContainer(400,400, clip = true) {
 		position(0,0)
 		val camera = camera {
@@ -18,6 +19,17 @@ suspend fun main() = Korge(width = 400, height = 400) {
 		addUpdater {
 			x = mouseX
 			y = mouseY
+		}
+		onCollision(filter = {
+			true
+		}) {
+			var touchesObjectBounds = false
+			collisionMaskLayer?.objects.orEmpty().map { it.bounds }.forEach { objectBounds ->
+				if (this.globalBounds.intersects(objectBounds)) {
+					touchesObjectBounds = true
+				}
+			}
+			fill = if (touchesObjectBounds) Colors.RED else Colors.BLUE
 		}
 	}
 }
